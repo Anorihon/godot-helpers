@@ -60,11 +60,11 @@ game.connect('unit_move_requested', _on_unit_move_requested)
         let disconnectCode = '';
 
         lines.forEach(line => {
-            const connectMatch = line.match(/(?:(\w+)\.)?connect\('(\w+)',\s*([\w_]+(?:\.bind\([\s\S]*?\))?)\)/);
+            const connectMatch = line.match(/(?:([\w.]+)\.)?connect\('(\w+)',\s*([\w_]+(?:\.bind\([\s\S]*?\))?)\)/);
             if (connectMatch) {
-                const [, object, signal, bindArgs] = connectMatch;
+                const [, objectPath, signal, bindArgs] = connectMatch;
                 let callback = bindArgs || '_on_' + signal; // Use default callback if no bindArgs
-                const connectedObject = object ? object + '.' : '';
+                let connectedObject = objectPath ? objectPath + '.' : '';
                 disconnectCode += `if ${connectedObject}is_connected('${signal}', ${callback.split('.bind')[0]}):\n`;
                 disconnectCode += `\t\t${connectedObject}disconnect('${signal}', ${callback.split('.bind')[0]})\n\n`;
             }
