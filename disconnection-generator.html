@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signal Connection/Disconnection Generator</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #gdScriptCode,
+        #result {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: none;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<textarea id="gdScriptCode" rows="10" cols="50">
+# Put your GDScript code here
+game.connect('unit_move_requested', _on_unit_move_requested)
+</textarea>
+<br>
+<textarea id="result" rows="10" cols="50" onclick="selectAll(this)"></textarea>
+<br>
+<button onclick="generateDisconnectCode()">Generate Disconnect Code</button><br>
+<button onclick="clearAll()">Clear All</button>
+
+<script>
+    function generateDisconnectCode() {
+        const gdScriptCode = document.getElementById('gdScriptCode').value;
+        const lines = gdScriptCode.split('\n');
+        let disconnectCode = '';
+
+        lines.forEach(line => {
+            const connectMatch = line.match(/(?:(\w+)\.)?connect\('(\w+)',\s*([\w_]+(?:\.bind\([\s\S]*?\))?)\)/);
+            if (connectMatch) {
+                const [, object, signal, bindArgs] = connectMatch;
+                let callback = bindArgs || '_on_' + signal; // Use default callback if no bindArgs
+                const connectedObject = object ? object + '.' : '';
+                disconnectCode += `if ${connectedObject}is_connected('${signal}', ${callback.split('.bind')[0]}):\n`;
+                disconnectCode += `\t\t${connectedObject}disconnect('${signal}', ${callback.split('.bind')[0]})\n\n`;
+            }
+        });
+
+        const result = document.getElementById('result');
+        result.value = disconnectCode;
+    }
+
+    function selectAll(textarea) {
+        textarea.select();
+    }
+
+    function clearAll() {
+        document.getElementById('gdScriptCode').value = '';
+        document.getElementById('result').value = '';
+    }
+</script>
+
+</body>
+</html>
